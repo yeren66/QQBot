@@ -1,4 +1,5 @@
 import asyncio
+import requests
 
 # from graia.application import group
 from graia.ariadne.message.parser.twilight import Twilight, FullMatch
@@ -11,6 +12,7 @@ from graia.ariadne.event.mirai import NudgeEvent
 from datetime import datetime
 from graia.ariadne.message.element import At, Plain, Image, Forward, ForwardNode
 from graia.ariadne.event.message import GroupMessage
+from graia.ariadne.event.message import  ActiveFriendMessage, ActiveGroupMessage
 
 import random
 
@@ -26,40 +28,67 @@ app = Ariadne(
     )
 )
 
+sendobject = []
+
 bcc = app.broadcast
 
+# @bcc.receiver("ActiveFriendMessage")
+# async def send(event: ActiveFriendMessage):
+#     await app.sendMessage(event.subject, event.messageChain)
+    # if(group.name == "bot测试"):
+    #     app.sendMessage(group, MessageChain.create("hi~"))
+    #     while(len(record) != 0):
+    #         app.sendMessage(group, MessageChain.create(record.pop()))
+    #     while(len(images) != 0):
+    #         app.sendMessage(group, MessageChain.create(images.pops()))
 
-# @bcc.receiver(GroupMessage)
-# async def setu(app: Ariadne, group: Group, message: MessageChain):
-#     await app.sendGroupMessage(
-#         group,
-#         MessageChain.create(f"不要说{message.asDisplay()}，来点涩图"),
-#     )
+
+@bcc.receiver(GroupMessage)
+async def setu(app: Ariadne, group: Group, message: MessageChain):
+    if(group.name == "bot测试-(cancel)" and group not in sendobject):
+        sendobject.append(group)
+    if(group.name == "bot测试2" and group not in sendobject):
+        sendobject.append(group)
+    if(group.name == "bot测试2"):
+        return 
+
+    if(message.has(Forward)):
+        if(len(sendobject) != 0):
+            for a in sendobject:
+                await app.sendMessage(a, MessageChain.create(message))
+    if(message.has(Image)):
+        image = message.__getitem__(Image)[0]
+        req = requests.get(image.url)
+        print(req.headers.get('Content-Length'))
+        if(int(req.headers.get('Content-Length')) > 50000):
+            if(len(sendobject) != 0):
+                for a in sendobject:
+                    await app.sendMessage(a, MessageChain.create(message))
+
 
 @broadcast.receiver("FriendMessage")
 async def friend_message_listener(app: Ariadne, friend: Friend, message: MessageChain):
-    await app.sendMessage(friend, MessageChain.create(Image(path="/home/joseph/picture/" + str(random.randint(1, 3706)) + ".jpg")))
-    if(message.asDisplay() == "我要色色"):
-        try:
-            await app.sendMessage(friend, MessageChain.create(Image(path="/home/joseph/picture/" + str(random.randint(1, 3600)) + ".jpg")))
-        except:
-            await app.sendMessage(friend, MessageChain.create("色不起来了QAQ"))
+    await app.sendMessage(friend, MessageChain.create("hello"))
+    if(message.has(Forward)):
+        await app.sendMessage(friend, MessageChain.create(message))
+
 
     # 实际上 MessageChain.create(...) 有没有 "[]" 都没关系
 
 
-@broadcast.receiver(NudgeEvent)
-async def getup(app: Ariadne, event: NudgeEvent):
-    if event.context_type == "group":
-        await app.sendGroupMessage(
-            event.group_id,
-            MessageChain.create("hello~")
-        )
-    else:
-        await app.sendFriendMessage(
-            event.friend_id,
-            MessageChain.create("别戳我，好痒")
-        )
+# @broadcast.receiver(NudgeEvent)
+# async def getup(app: Ariadne, event: NudgeEvent):
+#     if event.context_type == "group":
+#         await app.sendGroupMessage(
+#             event.group_id,
+#             MessageChain.create("hello~")
+#         )
+#     else:
+#         await app.sendFriendMessage(
+#             event.friend_id,
+#             MessageChain.create("别戳我，好痒")
+#         )
 
 
 loop.run_until_complete(app.lifecycle())
+# app.launch_blocking()

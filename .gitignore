@@ -1,0 +1,4 @@
+*.txt
+! analyzation.txt
+! directory.txt
+*.out
