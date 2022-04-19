@@ -1,4 +1,8 @@
 *.txt
 ! analyzation.txt
 ! directory.txt
+<<<<<<< HEAD
 
+=======
+*.out
+>>>>>>> dde4935abade7543636ca84d5c45e02f1df08814
